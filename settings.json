@@ -1,0 +1,8 @@
+{
+    "save": {
+        "audioFormat": "best",
+        "youtubeBetterAudio": true,
+        "alwaysProxy": true
+    },
+    "schemaVersion": 5
+}

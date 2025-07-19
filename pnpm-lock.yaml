@@ -52,6 +52,9 @@ importers:
       set-cookie-parser:
         specifier: 2.6.0
         version: 2.6.0
+      shelljs:
+        specifier: ^0.10.0
+        version: 0.10.0
       undici:
         specifier: ^5.19.1
         version: 5.28.4
@@ -1854,6 +1857,10 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
+  shelljs@0.10.0:
+    resolution: {integrity: sha512-Jex+xw5Mg2qMZL3qnzXIfaxEtBaC4n7xifqaqtrZDdlheR70OGkydrPJWT0V1cA1k3nanC86x9FwAmQl6w3Klw==}
+    engines: {node: '>=18'}
+
   side-channel@1.0.6:
     resolution: {integrity: sha512-fDW/EZ6Q9RiO8eFG8Hj+7u/oW+XrPTIChwCOM2+th2A6OblDtYYIpve9m+KvI9Z4C9qSEXlaGR6bTEYHReuglA==}
     engines: {node: '>= 0.4'}
@@ -3108,7 +3115,7 @@ snapshots:
 
   execa@5.1.1:
     dependencies:
-      cross-spawn: 7.0.3
+      cross-spawn: 7.0.6
       get-stream: 6.0.1
       human-signals: 2.1.0
       is-stream: 2.0.1
@@ -3744,6 +3751,11 @@ snapshots:
       shebang-regex: 3.0.0
 
   shebang-regex@3.0.0: {}
+
+  shelljs@0.10.0:
+    dependencies:
+      execa: 5.1.1
+      fast-glob: 3.3.2
 
   side-channel@1.0.6:
     dependencies:

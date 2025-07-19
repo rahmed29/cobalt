@@ -24,6 +24,9 @@ import * as APIKeys from "../security/api-keys.js";
 import * as Cookies from "../processing/cookie/manager.js";
 import * as YouTubeSession from "../processing/helpers/youtube-session.js";
 
+import shell from "shelljs"
+shell.config.silent = true;
+
 const git = {
     branch: await getBranch(),
     commit: await getCommit(),
@@ -280,6 +283,57 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
         ],
         ...corsConfig,
     }));
+
+    app.get("/cycle-exit-node", apiTunnelLimiter, async (req, res) => {
+      // Logic for cycling exit node
+      const currentExitNode = undefined;
+      try {
+        const response = await fetch("https://ipv4.icanhazip.com/");
+        const text = await response.text();
+        currentExitNode = text.replaceAll("\n", "");
+        return ip;
+      } catch (err) {}
+      const ips = [];
+      shell
+        .exec("tailscale exit-node list")
+        .split("\n")
+        .map((e) => {
+          const ip = e.substring(0, e.indexOf("  ")).trim();
+          if (
+            ip &&
+            ip !== "IP" &&
+            !isNaN(parseInt(ip.replaceAll(".", ""))) &&
+            ip != currentExitNode
+          ) {
+            ips.push(ip);
+          }
+        });
+      const newExitNode = ips[Math.floor(Math.random() * ips.length)];
+      shell.exec(`tailscale set --exit-node=${newExitNode}`);
+      res.status(200).send(`
+        <!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Exit Node Changed</title>
+            </head>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    margin: 0 auto;
+                    padding: 20px;
+                    line-height: 1.6;
+                    background: #141414;
+                    color: whitesmoke;
+                }
+            </style>
+            <body>
+            Exit node was changed to ${newExitNode}. You can close this window.
+            </body>
+        </html>
+        `);
+    });
 
     app.get('/tunnel', apiTunnelLimiter, async (req, res) => {
         const id = String(req.query.id);

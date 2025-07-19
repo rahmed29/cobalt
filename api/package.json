@@ -37,6 +37,7 @@
         "mime": "^4.0.4",
         "nanoid": "^5.0.9",
         "set-cookie-parser": "2.6.0",
+        "shelljs": "^0.10.0",
         "undici": "^5.19.1",
         "url-pattern": "1.0.3",
         "youtubei.js": "^13.4.0",

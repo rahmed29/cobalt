@@ -25,10 +25,11 @@
     <br/>
 </div>
 
-Cobalt with a few modifications
+**Cobalt with a few modifications**
 
 1. Replace `crypto.randomUUID()` on the frontend with a UUID function that doesn't require a secure origin
-2. TODO: Ability to switch to a random tailscale mullvad exit node
+2. Force the use of version 11.1
+3. Ability to switch to a random tailscale mullvad exit node
 
 ---
 
