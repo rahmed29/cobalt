@@ -2,7 +2,12 @@ import cors from "cors";
 import http from "node:http";
 import rateLimit from "express-rate-limit";
 import { setGlobalDispatcher, ProxyAgent } from "undici";
-import { getCommit, getBranch, getRemote, getVersion } from "@imput/version-info";
+import {
+  getCommit,
+  getBranch,
+  getRemote,
+  getVersion,
+} from "@imput/version-info";
 
 import jwt from "../security/jwt.js";
 import stream from "../stream/stream.js";
@@ -17,300 +22,289 @@ import { randomizeCiphers } from "../misc/randomize-ciphers.js";
 import { verifyTurnstileToken } from "../security/turnstile.js";
 import { friendlyServiceName } from "../processing/service-alias.js";
 import { verifyStream } from "../stream/manage.js";
-import { createResponse, normalizeRequest, getIP } from "../processing/request.js";
+import {
+  createResponse,
+  normalizeRequest,
+  getIP,
+} from "../processing/request.js";
 import { setupTunnelHandler } from "./itunnel.js";
 
 import * as APIKeys from "../security/api-keys.js";
 import * as Cookies from "../processing/cookie/manager.js";
 import * as YouTubeSession from "../processing/helpers/youtube-session.js";
 
-import shell from "shelljs"
+import shell from "shelljs";
+import cycleExitNode from "../added_by_ryaan/cycleExitNode.js";
 shell.config.silent = true;
 
 const git = {
-    branch: await getBranch(),
-    commit: await getCommit(),
-    remote: await getRemote(),
-}
+  branch: await getBranch(),
+  commit: await getCommit(),
+  remote: await getRemote(),
+};
 
 const version = await getVersion();
 
 const acceptRegex = /^application\/json(; charset=utf-8)?$/;
 
-const corsConfig = env.corsWildcard ? {} : {
-    origin: env.corsURL,
-    optionsSuccessStatus: 200
-}
-
-const fail = (res, code, context) => {
-    const { status, body } = createResponse("error", { code, context });
-    res.status(status).json(body);
-}
-
-export const runAPI = async (express, app, __dirname, isPrimary = true) => {
-    const startTime = new Date();
-    const startTimestamp = startTime.getTime();
-
-    const getServerInfo = () => {
-        return JSON.stringify({
-            cobalt: {
-                version: version,
-                url: env.apiURL,
-                startTime: `${startTimestamp}`,
-                turnstileSitekey: env.sessionEnabled ? env.turnstileSitekey : undefined,
-                services: [...env.enabledServices].map(e => {
-                    return friendlyServiceName(e);
-                }),
-            },
-            git,
-        });
-    }
-
-    const serverInfo = getServerInfo();
-
-    const handleRateExceeded = (_, res) => {
-        const { body } = createResponse("error", {
-            code: "error.api.rate_exceeded",
-            context: {
-                limit: env.rateLimitWindow
-            }
-        });
-        return res.status(429).json(body);
+const corsConfig = env.corsWildcard
+  ? {}
+  : {
+      origin: env.corsURL,
+      optionsSuccessStatus: 200,
     };
 
-    const keyGenerator = (req) => hashHmac(getIP(req), 'rate').toString('base64url');
+const fail = (res, code, context) => {
+  const { status, body } = createResponse("error", { code, context });
+  res.status(status).json(body);
+};
 
-    const sessionLimiter = rateLimit({
-        windowMs: env.sessionRateLimitWindow * 1000,
-        limit: env.sessionRateLimit,
-        standardHeaders: 'draft-6',
-        legacyHeaders: false,
-        keyGenerator,
-        store: await createStore('session'),
-        handler: handleRateExceeded
+export const runAPI = async (express, app, __dirname, isPrimary = true) => {
+  const startTime = new Date();
+  const startTimestamp = startTime.getTime();
+
+  const getServerInfo = () => {
+    return JSON.stringify({
+      cobalt: {
+        version: version,
+        url: env.apiURL,
+        startTime: `${startTimestamp}`,
+        turnstileSitekey: env.sessionEnabled ? env.turnstileSitekey : undefined,
+        services: [...env.enabledServices].map((e) => {
+          return friendlyServiceName(e);
+        }),
+      },
+      git,
     });
+  };
 
-    const apiLimiter = rateLimit({
-        windowMs: env.rateLimitWindow * 1000,
-        limit: (req) => req.rateLimitMax || env.rateLimitMax,
-        standardHeaders: 'draft-6',
-        legacyHeaders: false,
-        keyGenerator: req => req.rateLimitKey || keyGenerator(req),
-        store: await createStore('api'),
-        handler: handleRateExceeded
+  const serverInfo = getServerInfo();
+
+  const handleRateExceeded = (_, res) => {
+    const { body } = createResponse("error", {
+      code: "error.api.rate_exceeded",
+      context: {
+        limit: env.rateLimitWindow,
+      },
     });
+    return res.status(429).json(body);
+  };
 
-    const apiTunnelLimiter = rateLimit({
-        windowMs: env.tunnelRateLimitWindow * 1000,
-        limit: env.tunnelRateLimitMax,
-        standardHeaders: 'draft-6',
-        legacyHeaders: false,
-        keyGenerator: req => keyGenerator(req),
-        store: await createStore('tunnel'),
-        handler: (_, res) => {
-            return res.sendStatus(429);
-        }
-    });
+  const keyGenerator = (req) =>
+    hashHmac(getIP(req), "rate").toString("base64url");
 
-    app.set('trust proxy', ['loopback', 'uniquelocal']);
+  const sessionLimiter = rateLimit({
+    windowMs: env.sessionRateLimitWindow * 1000,
+    limit: env.sessionRateLimit,
+    standardHeaders: "draft-6",
+    legacyHeaders: false,
+    keyGenerator,
+    store: await createStore("session"),
+    handler: handleRateExceeded,
+  });
 
-    app.use('/', cors({
-        methods: ['GET', 'POST'],
-        exposedHeaders: [
-            'Ratelimit-Limit',
-            'Ratelimit-Policy',
-            'Ratelimit-Remaining',
-            'Ratelimit-Reset'
-        ],
-        ...corsConfig,
-    }));
+  const apiLimiter = rateLimit({
+    windowMs: env.rateLimitWindow * 1000,
+    limit: (req) => req.rateLimitMax || env.rateLimitMax,
+    standardHeaders: "draft-6",
+    legacyHeaders: false,
+    keyGenerator: (req) => req.rateLimitKey || keyGenerator(req),
+    store: await createStore("api"),
+    handler: handleRateExceeded,
+  });
 
-    app.post('/', (req, res, next) => {
-        if (!acceptRegex.test(req.header('Accept'))) {
-            return fail(res, "error.api.header.accept");
-        }
-        if (!acceptRegex.test(req.header('Content-Type'))) {
-            return fail(res, "error.api.header.content_type");
-        }
-        next();
-    });
+  const apiTunnelLimiter = rateLimit({
+    windowMs: env.tunnelRateLimitWindow * 1000,
+    limit: env.tunnelRateLimitMax,
+    standardHeaders: "draft-6",
+    legacyHeaders: false,
+    keyGenerator: (req) => keyGenerator(req),
+    store: await createStore("tunnel"),
+    handler: (_, res) => {
+      return res.sendStatus(429);
+    },
+  });
 
-    app.post('/', (req, res, next) => {
-        if (!env.apiKeyURL) {
-            return next();
-        }
+  app.set("trust proxy", ["loopback", "uniquelocal"]);
 
-        const { success, error } = APIKeys.validateAuthorization(req);
-        if (!success) {
-            // We call next() here if either if:
-            // a) we have user sessions enabled, meaning the request
-            //    will still need a Bearer token to not be rejected, or
-            // b) we do not require the user to be authenticated, and
-            //    so they can just make the request with the regular
-            //    rate limit configuration;
-            // otherwise, we reject the request.
-            if (
-                (env.sessionEnabled || !env.authRequired)
-                && ['missing', 'not_api_key'].includes(error)
-            ) {
-                return next();
-            }
+  app.use(
+    "/",
+    cors({
+      methods: ["GET", "POST"],
+      exposedHeaders: [
+        "Ratelimit-Limit",
+        "Ratelimit-Policy",
+        "Ratelimit-Remaining",
+        "Ratelimit-Reset",
+      ],
+      ...corsConfig,
+    })
+  );
 
-            return fail(res, `error.api.auth.key.${error}`);
-        }
+  app.post("/", (req, res, next) => {
+    if (!acceptRegex.test(req.header("Accept"))) {
+      return fail(res, "error.api.header.accept");
+    }
+    if (!acceptRegex.test(req.header("Content-Type"))) {
+      return fail(res, "error.api.header.content_type");
+    }
+    next();
+  });
 
+  app.post("/", (req, res, next) => {
+    if (!env.apiKeyURL) {
+      return next();
+    }
+
+    const { success, error } = APIKeys.validateAuthorization(req);
+    if (!success) {
+      // We call next() here if either if:
+      // a) we have user sessions enabled, meaning the request
+      //    will still need a Bearer token to not be rejected, or
+      // b) we do not require the user to be authenticated, and
+      //    so they can just make the request with the regular
+      //    rate limit configuration;
+      // otherwise, we reject the request.
+      if (
+        (env.sessionEnabled || !env.authRequired) &&
+        ["missing", "not_api_key"].includes(error)
+      ) {
         return next();
-    });
+      }
 
-    app.post('/', (req, res, next) => {
-        if (!env.sessionEnabled || req.rateLimitKey) {
-            return next();
-        }
+      return fail(res, `error.api.auth.key.${error}`);
+    }
 
-        try {
-            const authorization = req.header("Authorization");
-            if (!authorization) {
-                return fail(res, "error.api.auth.jwt.missing");
-            }
+    return next();
+  });
 
-            if (authorization.length >= 256) {
-                return fail(res, "error.api.auth.jwt.invalid");
-            }
+  app.post("/", (req, res, next) => {
+    if (!env.sessionEnabled || req.rateLimitKey) {
+      return next();
+    }
 
-            const [ type, token, ...rest ] = authorization.split(" ");
-            if (!token || type.toLowerCase() !== 'bearer' || rest.length) {
-                return fail(res, "error.api.auth.jwt.invalid");
-            }
+    try {
+      const authorization = req.header("Authorization");
+      if (!authorization) {
+        return fail(res, "error.api.auth.jwt.missing");
+      }
 
-            if (!jwt.verify(token, getIP(req, 32))) {
-                return fail(res, "error.api.auth.jwt.invalid");
-            }
+      if (authorization.length >= 256) {
+        return fail(res, "error.api.auth.jwt.invalid");
+      }
 
-            req.rateLimitKey = hashHmac(token, 'rate');
-            req.isSession = true;
-        } catch {
-            return fail(res, "error.api.generic");
-        }
-        next();
-    });
+      const [type, token, ...rest] = authorization.split(" ");
+      if (!token || type.toLowerCase() !== "bearer" || rest.length) {
+        return fail(res, "error.api.auth.jwt.invalid");
+      }
 
-    app.post('/', apiLimiter);
-    app.use('/', express.json({ limit: 1024 }));
+      if (!jwt.verify(token, getIP(req, 32))) {
+        return fail(res, "error.api.auth.jwt.invalid");
+      }
 
-    app.use('/', (err, _, res, next) => {
-        if (err) {
-            const { status, body } = createResponse("error", {
-                code: "error.api.invalid_body",
-            });
-            return res.status(status).json(body);
-        }
+      req.rateLimitKey = hashHmac(token, "rate");
+      req.isSession = true;
+    } catch {
+      return fail(res, "error.api.generic");
+    }
+    next();
+  });
 
-        next();
-    });
+  app.post("/", apiLimiter);
+  app.use("/", express.json({ limit: 1024 }));
 
-    app.post("/session", sessionLimiter, async (req, res) => {
-        if (!env.sessionEnabled) {
-            return fail(res, "error.api.auth.not_configured")
-        }
+  app.use("/", (err, _, res, next) => {
+    if (err) {
+      const { status, body } = createResponse("error", {
+        code: "error.api.invalid_body",
+      });
+      return res.status(status).json(body);
+    }
 
-        const turnstileResponse = req.header("cf-turnstile-response");
+    next();
+  });
 
-        if (!turnstileResponse) {
-            return fail(res, "error.api.auth.turnstile.missing");
-        }
+  app.post("/session", sessionLimiter, async (req, res) => {
+    if (!env.sessionEnabled) {
+      return fail(res, "error.api.auth.not_configured");
+    }
 
-        const turnstileResult = await verifyTurnstileToken(
-            turnstileResponse,
-            req.ip
-        );
+    const turnstileResponse = req.header("cf-turnstile-response");
 
-        if (!turnstileResult) {
-            return fail(res, "error.api.auth.turnstile.invalid");
-        }
+    if (!turnstileResponse) {
+      return fail(res, "error.api.auth.turnstile.missing");
+    }
 
-        try {
-            res.json(jwt.generate(getIP(req, 32)));
-        } catch {
-            return fail(res, "error.api.generic");
-        }
-    });
+    const turnstileResult = await verifyTurnstileToken(
+      turnstileResponse,
+      req.ip
+    );
 
-    app.post('/', async (req, res) => {
-        const request = req.body;
+    if (!turnstileResult) {
+      return fail(res, "error.api.auth.turnstile.invalid");
+    }
 
-        if (!request.url) {
-            return fail(res, "error.api.link.missing");
-        }
+    try {
+      res.json(jwt.generate(getIP(req, 32)));
+    } catch {
+      return fail(res, "error.api.generic");
+    }
+  });
 
-        const { success, data: normalizedRequest } = await normalizeRequest(request);
-        if (!success) {
-            return fail(res, "error.api.invalid_body");
-        }
+  app.post("/", async (req, res) => {
+    const request = req.body;
 
-        const parsed = extract(normalizedRequest.url);
+    if (!request.url) {
+      return fail(res, "error.api.link.missing");
+    }
 
-        if (!parsed) {
-            return fail(res, "error.api.link.invalid");
-        }
+    const { success, data: normalizedRequest } =
+      await normalizeRequest(request);
+    if (!success) {
+      return fail(res, "error.api.invalid_body");
+    }
 
-        if ("error" in parsed) {
-            let context;
-            if (parsed?.context) {
-                context = parsed.context;
-            }
-            return fail(res, `error.api.${parsed.error}`, context);
-        }
+    const parsed = extract(normalizedRequest.url);
 
-        try {
-            const result = await match({
-                host: parsed.host,
-                patternMatch: parsed.patternMatch,
-                params: normalizedRequest,
-                isSession: req.isSession ?? false,
-            });
+    if (!parsed) {
+      return fail(res, "error.api.link.invalid");
+    }
 
-            res.status(result.status).json(result.body);
-        } catch {
-            fail(res, "error.api.generic");
-        }
-    });
+    if ("error" in parsed) {
+      let context;
+      if (parsed?.context) {
+        context = parsed.context;
+      }
+      return fail(res, `error.api.${parsed.error}`, context);
+    }
 
-    app.use('/tunnel', cors({
-        methods: ['GET'],
-        exposedHeaders: [
-            'Estimated-Content-Length',
-            'Content-Disposition'
-        ],
-        ...corsConfig,
-    }));
+    try {
+      const result = await match({
+        host: parsed.host,
+        patternMatch: parsed.patternMatch,
+        params: normalizedRequest,
+        isSession: req.isSession ?? false,
+      });
 
-    app.get("/cycle-exit-node", apiTunnelLimiter, async (req, res) => {
-      // Logic for cycling exit node
-      const currentExitNode = undefined;
-      try {
-        const response = await fetch("https://ipv4.icanhazip.com/");
-        const text = await response.text();
-        currentExitNode = text.replaceAll("\n", "");
-        return ip;
-      } catch (err) {}
-      const ips = [];
-      shell
-        .exec("tailscale exit-node list")
-        .split("\n")
-        .map((e) => {
-          const ip = e.substring(0, e.indexOf("  ")).trim();
-          if (
-            ip &&
-            ip !== "IP" &&
-            !isNaN(parseInt(ip.replaceAll(".", ""))) &&
-            ip != currentExitNode
-          ) {
-            ips.push(ip);
-          }
-        });
-      const newExitNode = ips[Math.floor(Math.random() * ips.length)];
-      shell.exec(`tailscale set --exit-node=${newExitNode}`);
-      res.status(200).send(`
+      res.status(result.status).json(result.body);
+    } catch {
+      fail(res, "error.api.generic");
+    }
+  });
+
+  app.use(
+    "/tunnel",
+    cors({
+      methods: ["GET"],
+      exposedHeaders: ["Estimated-Content-Length", "Content-Disposition"],
+      ...corsConfig,
+    })
+  );
+
+  app.get("/cycle-exit-node", (req, res) => {
+    // Logic for cycling exit node
+    const newExitNode = cycleExitNode();
+    res.status(200).send(`
         <!DOCTYPE html>
         <html lang="en">
             <head>
@@ -333,98 +327,117 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
             </body>
         </html>
         `);
-    });
+  });
 
-    app.get('/tunnel', apiTunnelLimiter, async (req, res) => {
-        const id = String(req.query.id);
-        const exp = String(req.query.exp);
-        const sig = String(req.query.sig);
-        const sec = String(req.query.sec);
-        const iv = String(req.query.iv);
+  app.get("/tunnel", apiTunnelLimiter, async (req, res) => {
+    const id = String(req.query.id);
+    const exp = String(req.query.exp);
+    const sig = String(req.query.sig);
+    const sec = String(req.query.sec);
+    const iv = String(req.query.iv);
 
-        const checkQueries = id && exp && sig && sec && iv;
-        const checkBaseLength = id.length === 21 && exp.length === 13;
-        const checkSafeLength = sig.length === 43 && sec.length === 43 && iv.length === 22;
+    const checkQueries = id && exp && sig && sec && iv;
+    const checkBaseLength = id.length === 21 && exp.length === 13;
+    const checkSafeLength =
+      sig.length === 43 && sec.length === 43 && iv.length === 22;
 
-        if (!checkQueries || !checkBaseLength || !checkSafeLength) {
-            return res.status(400).end();
-        }
-
-        if (req.query.p) {
-            return res.status(200).end();
-        }
-
-        const streamInfo = await verifyStream(id, sig, exp, sec, iv);
-        if (!streamInfo?.service) {
-            return res.status(streamInfo.status).end();
-        }
-
-        if (streamInfo.type === 'proxy') {
-            streamInfo.range = req.headers['range'];
-        }
-
-        return stream(res, streamInfo);
-    });
-
-    app.get('/', (_, res) => {
-        res.type('json');
-        res.status(200).send(env.envFile ? getServerInfo() : serverInfo);
-    })
-
-    app.get('/favicon.ico', (req, res) => {
-        res.status(404).end();
-    })
-
-    app.get('/*', (req, res) => {
-        res.redirect('/');
-    })
-
-    // handle all express errors
-    app.use((_, __, res, ___) => {
-        return fail(res, "error.api.generic");
-    })
-
-    randomizeCiphers();
-    setInterval(randomizeCiphers, 1000 * 60 * 30); // shuffle ciphers every 30 minutes
-
-    if (env.externalProxy) {
-        setGlobalDispatcher(new ProxyAgent(env.externalProxy))
+    if (!checkQueries || !checkBaseLength || !checkSafeLength) {
+      return res.status(400).end();
     }
 
-    http.createServer(app).listen({
-        port: env.apiPort,
-        host: env.listenAddress,
-        reusePort: env.instanceCount > 1 || undefined
-    }, () => {
-        if (isPrimary) {
-            console.log(`\n` +
-                Bright(Cyan("cobalt ")) + Bright("API ^ω^") + "\n" +
+    if (req.query.p) {
+      return res.status(200).end();
+    }
 
-                "~~~~~~\n" +
-                Bright("version: ") + version + "\n" +
-                Bright("commit: ") + git.commit + "\n" +
-                Bright("branch: ") + git.branch + "\n" +
-                Bright("remote: ") + git.remote + "\n" +
-                Bright("start time: ") + startTime.toUTCString() + "\n" +
-                "~~~~~~\n" +
+    const streamInfo = await verifyStream(id, sig, exp, sec, iv);
+    if (!streamInfo?.service) {
+      return res.status(streamInfo.status).end();
+    }
 
-                Bright("url: ") + Bright(Cyan(env.apiURL)) + "\n" +
-                Bright("port: ") + env.apiPort + "\n"
-            );
-        }
+    if (streamInfo.type === "proxy") {
+      streamInfo.range = req.headers["range"];
+    }
 
-        if (env.apiKeyURL) {
-            APIKeys.setup(env.apiKeyURL);
-        }
+    return stream(res, streamInfo);
+  });
 
-        if (env.cookiePath) {
-            Cookies.setup(env.cookiePath);
-        }
+  app.get("/", (_, res) => {
+    res.type("json");
+    res.status(200).send(env.envFile ? getServerInfo() : serverInfo);
+  });
 
-        if (env.ytSessionServer) {
-            YouTubeSession.setup();
-        }
-    });
+  app.get("/favicon.ico", (req, res) => {
+    res.status(404).end();
+  });
 
-    setupTunnelHandler();
-}
+  app.get("/*", (req, res) => {
+    res.redirect("/");
+  });
+
+  // handle all express errors
+  app.use((_, __, res, ___) => {
+    return fail(res, "error.api.generic");
+  });
+
+  randomizeCiphers();
+  setInterval(randomizeCiphers, 1000 * 60 * 30); // shuffle ciphers every 30 minutes
+
+  if (env.externalProxy) {
+    setGlobalDispatcher(new ProxyAgent(env.externalProxy));
+  }
+
+  http.createServer(app).listen(
+    {
+      port: env.apiPort,
+      host: env.listenAddress,
+      reusePort: env.instanceCount > 1 || undefined,
+    },
+    () => {
+      if (isPrimary) {
+        console.log(
+          `\n` +
+            Bright(Cyan("cobalt ")) +
+            Bright("API ^ω^") +
+            "\n" +
+            "~~~~~~\n" +
+            Bright("version: ") +
+            version +
+            "\n" +
+            Bright("commit: ") +
+            git.commit +
+            "\n" +
+            Bright("branch: ") +
+            git.branch +
+            "\n" +
+            Bright("remote: ") +
+            git.remote +
+            "\n" +
+            Bright("start time: ") +
+            startTime.toUTCString() +
+            "\n" +
+            "~~~~~~\n" +
+            Bright("url: ") +
+            Bright(Cyan(env.apiURL)) +
+            "\n" +
+            Bright("port: ") +
+            env.apiPort +
+            "\n"
+        );
+      }
+
+      if (env.apiKeyURL) {
+        APIKeys.setup(env.apiKeyURL);
+      }
+
+      if (env.cookiePath) {
+        Cookies.setup(env.cookiePath);
+      }
+
+      if (env.ytSessionServer) {
+        YouTubeSession.setup();
+      }
+    }
+  );
+
+  setupTunnelHandler();
+};

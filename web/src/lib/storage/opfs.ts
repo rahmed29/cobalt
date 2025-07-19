@@ -1,5 +1,5 @@
 import { AbstractStorage } from "./storage";
-import { uuid } from "../../../added_by_ryaan/uuid";
+import { uuid } from "../../added_by_ryaan/uuid";
 
 const COBALT_PROCESSING_DIR = "cobalt-processing-data";
 

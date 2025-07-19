@@ -6,6 +6,7 @@ import { Innertube, Session } from "youtubei.js";
 import { env } from "../../config.js";
 import { getCookie } from "../cookie/manager.js";
 import { getYouTubeSession } from "../helpers/youtube-session.js";
+import cycleExitNode from "../../added_by_ryaan/cycleExitNode.js";
 
 const PLAYER_REFRESH_PERIOD = 1000 * 60 * 15; // ms
 
@@ -170,6 +171,7 @@ export default async function (o) {
     switch (playability.status) {
         case "LOGIN_REQUIRED":
             if (playability.reason.endsWith("bot")) {
+                cycleExitNode();
                 return { error: "youtube.login" }
             }
             if (playability.reason.endsWith("age") || playability.reason.endsWith("inappropriate for some users.")) {

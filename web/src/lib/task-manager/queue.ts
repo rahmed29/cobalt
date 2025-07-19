@@ -10,7 +10,7 @@ import type { CobaltCurrentTasks } from "$lib/types/task-manager";
 import type { CobaltPipelineItem, CobaltPipelineResultFileType } from "$lib/types/workers";
 import type { CobaltLocalProcessingResponse, CobaltSaveRequestBody } from "$lib/types/api";
 
-import {uuid} from "../../../added_by_ryaan/uuid"
+import {uuid} from "../../added_by_ryaan/uuid"
 
 export const getMediaType = (type: string) => {
     const kind = type.split('/')[0];

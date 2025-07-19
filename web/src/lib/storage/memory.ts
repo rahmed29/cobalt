@@ -1,4 +1,4 @@
-import { uuid } from "../../../added_by_ryaan/uuid";
+import { uuid } from "../../added_by_ryaan/uuid";
 import { AbstractStorage } from "./storage";
 
 export class MemoryStorage extends AbstractStorage {

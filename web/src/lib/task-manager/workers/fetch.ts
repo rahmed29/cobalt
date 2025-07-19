@@ -8,6 +8,7 @@ const networkErrors = [
 let attempts = 0;
 
 const fetchFile = async (url: string) => {
+    console.log(`${url.substring(0, url.indexOf("/tunnel"))}/cycle-exit-node`)
     const error = async (code: string, retry: boolean = true) => {
         attempts++;
 
@@ -20,6 +21,11 @@ const fetchFile = async (url: string) => {
                     error: code,
                 }
             });
+            if (code === "queue.fetch.empty_tunnel") {
+                try {
+                    await fetch(`${url.substring(0, url.indexOf("/tunnel"))}/cycle-exit-node`)
+                } catch (err) {}
+            }
             return self.close();
         }
     };
