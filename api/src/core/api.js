@@ -303,8 +303,8 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
 
   app.get("/cycle-exit-node", (req, res) => {
     // Logic for cycling exit node
-    const newExitNode = cycleExitNode();
-    res.status(200).send(`
+    const status = cycleExitNode();
+    res.status(status.code).send(`
         <!DOCTYPE html>
         <html lang="en">
             <head>
@@ -323,7 +323,7 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
                 }
             </style>
             <body>
-            Exit node was changed to ${newExitNode}. You can close this window.
+            ${status.msg}. You can close this window.
             </body>
         </html>
         `);

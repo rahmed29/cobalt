@@ -113,9 +113,9 @@
         {/if}
         <DialogHolder />
         <Sidebar />
-        {#if $updated}
+        <!-- {#if $updated}
             <UpdateNotification />
-        {/if}
+        {/if} -->
         <ProcessingQueue />
         <div id="content">
             {#if ($turnstileEnabled && $page.url.pathname === "/") || $turnstileCreated}

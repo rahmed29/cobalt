@@ -1,9 +1,16 @@
 import shell from "shelljs";
 
+let timeOfLastCycle = Date.now();
+
 function cycleExitNode() {
+  if (Date.now() - timeOfLastCycle <= 5000) {
+    return {
+      code: 429,
+      msg: "The exit node was not changed because it was changed too recently",
+    };
+  }
   try {
     const list = shell.exec("tailscale exit-node list").split("\n");
-
     let currentExitNode = undefined;
     list.map((e) => {
       if (e.includes("selected")) {
@@ -29,11 +36,16 @@ function cycleExitNode() {
 
     const newExitNode = ips[Math.floor(Math.random() * ips.length)];
     shell.exec(`tailscale set --exit-node=${newExitNode}`);
-    console.log("Exit node successfully changed.");
-    return newExitNode;
+    timeOfLastCycle = Date.now();
+    return {
+      code: 200,
+      msg: `The exit node was changed to ${newExitNode}`,
+    };
   } catch (err) {
-    console.error("Could not cycle exit node.");
-    return undefined;
+    return {
+      code: 500,
+      msg: `The exit node was not changed because an error occurred: ${err.message}`,
+    };
   }
 }
 
