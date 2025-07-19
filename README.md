@@ -25,6 +25,13 @@
     <br/>
 </div>
 
+Cobalt with a few modifications
+
+1. Replace `crypto.randomUUID()` on the frontend with a UUID function that doesn't require a secure origin
+2. TODO: Ability to switch to a random tailscale mullvad exit node
+
+---
+
 cobalt is a media downloader that doesn't piss you off. it's friendly, efficient, and doesn't have ads, trackers, paywalls or other nonsense.
 
 paste the link, get the file, move on. that simple, just how it should be.
