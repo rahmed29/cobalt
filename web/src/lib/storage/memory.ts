@@ -1,3 +1,4 @@
+import { uuid } from "../../../added_by_ryaan/uuid";
 import { AbstractStorage } from "./storage";
 
 export class MemoryStorage extends AbstractStorage {
@@ -48,7 +49,7 @@ export class MemoryStorage extends AbstractStorage {
             }
         }
 
-        return new File(outputView, crypto.randomUUID());
+        return new File(outputView, uuid());
     }
 
     #expand(size: number) {

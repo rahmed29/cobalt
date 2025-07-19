@@ -10,6 +10,8 @@ import type { CobaltCurrentTasks } from "$lib/types/task-manager";
 import type { CobaltPipelineItem, CobaltPipelineResultFileType } from "$lib/types/workers";
 import type { CobaltLocalProcessingResponse, CobaltSaveRequestBody } from "$lib/types/api";
 
+import {uuid} from "../../../added_by_ryaan/uuid"
+
 export const getMediaType = (type: string) => {
     const kind = type.split('/')[0];
 
@@ -20,12 +22,12 @@ export const getMediaType = (type: string) => {
 }
 
 export const createRemuxPipeline = (file: File) => {
-    const parentId = crypto.randomUUID();
+    const parentId = uuid();
     const mediaType = getMediaType(file.type);
 
     const pipeline: CobaltPipelineItem[] = [{
         worker: "remux",
-        workerId: crypto.randomUUID(),
+        workerId: uuid(),
         parentId,
         workerArgs: {
             files: [file],
@@ -140,7 +142,7 @@ export const createSavePipeline = (
         return showError("pipeline.missing_response_data");
     }
 
-    const parentId = oldTaskId || crypto.randomUUID();
+    const parentId = oldTaskId || uuid();
     const pipeline: CobaltPipelineItem[] = [];
 
     // reverse is needed for audio (second item) to be downloaded first
@@ -149,7 +151,7 @@ export const createSavePipeline = (
     for (const tunnel of tunnels) {
         pipeline.push({
             worker: "fetch",
-            workerId: crypto.randomUUID(),
+            workerId: uuid(),
             parentId,
             workerArgs: {
                 url: tunnel,
@@ -182,7 +184,7 @@ export const createSavePipeline = (
 
     pipeline.push({
         worker: workerType,
-        workerId: crypto.randomUUID(),
+        workerId: uuid(),
         parentId,
         dependsOn: pipeline.map(w => w.workerId),
         workerArgs: {
