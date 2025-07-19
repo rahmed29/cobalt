@@ -1,8 +1,31 @@
+// Ideal settings imo
 {
     "save": {
         "audioFormat": "best",
         "youtubeBetterAudio": true,
-        "alwaysProxy": true
+        "alwaysProxy": true,
+        "filenameStyle": "basic",
+        "downloadMode": "auto",
+        "youtubeHLS": false,
+        "allowH265": false,
+        "convertGif": true,
+        "tiktokFullAudio": false,
+        "savingMethod": "download",
+        "disableMetadata": false,
+        "localProcessing": true
     },
-    "schemaVersion": 5
+    "schemaVersion": 5,
+    "appearance": {
+        "theme": "auto",
+        "autoLanguage": true
+    },
+    "accessibility": {
+        "reduceMotion": false,
+        "reduceTransparency": false,
+        "dontAutoOpenQueue": false
+    },
+    "processing": {
+        "enableCustomInstances": false,
+        "enableCustomApiKey": false
+    }
 }

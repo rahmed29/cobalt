@@ -10,5 +10,4 @@ function uuid() {
 
 // What I did was replaced all instances of crypto.randomUUID() with this function (in the frontend code)
 // This is because I want to access to this over the LAN which is not considered a secure origin by the browser
-// TODO: Add the ability for the API to switch mullvad exit nodes if YouTube is giving it issues.
 export { uuid }
