@@ -27,9 +27,9 @@
 
 **Cobalt with a few modifications**
 
-1. Replace `crypto.randomUUID()` on the frontend with a UUID function that doesn't require a secure origin.
-2. Ability to switch to a random tailscale mullvad exit node (this was done by simply adding a `cycle-exit-node` GET endpoint and adding a link to it on the front page)
-3. Stick to API version 11.1 (commit 0bcb28c44cdb0b2201da0d1b4729db8cb7d5cb04)
+1. Replace `crypto.randomUUID()` on the frontend with a function that doesn't require a secure origin.
+2. Ability to switch to a random tailscale mullvad exit node (this was done by simply adding a `/cycle-exit-node` endpoint and adding a link to it on the front page)
+3. Stick to API version 11.1 (commit `0bcb28c44cdb0b2201da0d1b4729db8cb7d5cb04`)
 
 ---
 
