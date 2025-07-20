@@ -12,38 +12,32 @@ function cycleExitNode() {
   try {
     const list = shell.exec("tailscale exit-node list").split("\n");
     let currentExitNode = undefined;
-    list.map((e) => {
+    list.forEach((e) => {
       if (e.includes("selected")) {
-        currentExitNode = e;
+        currentExitNode = e.substring(0, e.indexOf("  ")).trim();
       }
     });
-    currentExitNode = currentExitNode
-      .substring(0, currentExitNode.indexOf("  "))
-      .trim();
-
-    const ips = [];
-    list.map((e) => {
+    const ips = list.reduce((prev, e, i, arr) => {
       const ip = e.substring(0, e.indexOf("  ")).trim();
       if (
         ip &&
         ip !== "IP" &&
         !isNaN(parseInt(ip.replaceAll(".", ""))) &&
-        ip != currentExitNode
+        ip !== currentExitNode
       ) {
-        ips.push(ip);
+        arr.push(ip);
       }
-    });
-
-    const newExitNode = ips[Math.floor(Math.random() * ips.length)];
-    if (newExitNode) {
-      shell.exec(`tailscale set --exit-node=${newExitNode}`);
-      timeOfLastCycle = Date.now();
-    } else {
+      return arr;
+    }, []);
+    if (ips.length === 0) {
       return {
         code: 500,
-        msg: `The exit node was not changed because a new exit node could not be found.`,
+        msg: `The exit node was not changed because a new exit node could not be found`,
       };
     }
+    const newExitNode = ips[Math.floor(Math.random() * ips.length)];
+    shell.exec(`tailscale set --exit-node=${newExitNode}`);
+    timeOfLastCycle = Date.now();
     return {
       code: 200,
       msg: `The exit node was changed to ${newExitNode}`,
