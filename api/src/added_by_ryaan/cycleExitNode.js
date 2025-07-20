@@ -35,8 +35,15 @@ function cycleExitNode() {
     });
 
     const newExitNode = ips[Math.floor(Math.random() * ips.length)];
-    shell.exec(`tailscale set --exit-node=${newExitNode}`);
-    timeOfLastCycle = Date.now();
+    if (newExitNode) {
+      shell.exec(`tailscale set --exit-node=${newExitNode}`);
+      timeOfLastCycle = Date.now();
+    } else {
+      return {
+        code: 500,
+        msg: `The exit node was not changed because a new exit node could not be found.`,
+      };
+    }
     return {
       code: 200,
       msg: `The exit node was changed to ${newExitNode}`,
