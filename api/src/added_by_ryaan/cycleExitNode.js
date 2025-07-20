@@ -17,7 +17,8 @@ function cycleExitNode() {
         currentExitNode = e.substring(0, e.indexOf("  ")).trim();
       }
     });
-    const ips = list.reduce((prev, e, i, arr) => {
+    const ips = [];
+    list.forEach((e) => {
       const ip = e.substring(0, e.indexOf("  ")).trim();
       if (
         ip &&
@@ -25,10 +26,9 @@ function cycleExitNode() {
         !isNaN(parseInt(ip.replaceAll(".", ""))) &&
         ip !== currentExitNode
       ) {
-        arr.push(ip);
+        ips.push(ip);
       }
-      return arr;
-    }, []);
+    });
     if (ips.length === 0) {
       return {
         code: 500,
