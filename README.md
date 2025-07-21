@@ -30,6 +30,7 @@
 1. Replace `crypto.randomUUID()` on the frontend with a function that doesn't require a secure origin.
 2. Ability to switch to a random [Tailscale Mullvad exit node](https://tailscale.com/kb/1258/mullvad-exit-nodes) upon failure (or manually)
 3. Stick to API version 11.1 (commit `0bcb28c44cdb0b2201da0d1b4729db8cb7d5cb04`)
+4. Change default settings to always tunnel files and prioritize quality when downloading audio
 
 ---
 
