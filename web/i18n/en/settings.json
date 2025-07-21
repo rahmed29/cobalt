@@ -118,7 +118,7 @@
 
     "privacy.tunnel": "tunneling",
     "privacy.tunnel.title": "always tunnel files",
-    "privacy.tunnel.description": "cobalt will hide your ip address, browser info, and bypass local network restrictions. when enabled, files will also have readable filenames that otherwise would be gibberish.",
+    "privacy.tunnel.description": "cobalt will hide your ip address, browser info, and bypass local network restrictions. You cannot disable this setting on this instance.",
 
     "advanced.debug": "debug",
     "advanced.debug.title": "enable features for nerds",

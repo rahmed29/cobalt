@@ -21,10 +21,10 @@ const defaultSettings: CobaltSettings = {
         dontAutoOpenQueue: false,
     },
     save: {
-        alwaysProxy: false,
+        alwaysProxy: true,
         localProcessing: device.supports.defaultLocalProcessing || false,
         audioBitrate: "128",
-        audioFormat: "mp3",
+        audioFormat: "best",
         disableMetadata: false,
         downloadMode: "auto",
         filenameStyle: "basic",
@@ -36,7 +36,7 @@ const defaultSettings: CobaltSettings = {
         youtubeVideoCodec: "h264",
         youtubeDubLang: "original",
         youtubeHLS: false,
-        youtubeBetterAudio: false,
+        youtubeBetterAudio: true,
     },
     privacy: {
         disableAnalytics: false,

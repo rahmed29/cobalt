@@ -13,12 +13,13 @@
 
     export let settingId: Id;
     export let settingContext: Context;
+    export let forced: string = "";
 
     export let title: string;
     export let description: string = "";
 
-    export let disabled = false;
-    export let disabledOpacity = false;
+    export let disabled = forced ? true : false;
+    export let disabledOpacity = forced ? true : false;
 
     $: setting = $settings[settingContext][settingId];
     $: isEnabled = !!setting;
@@ -37,6 +38,9 @@
         aria-checked={isEnabled}
         {disabled}
         on:click={() => {
+            if (forced) {
+                return
+            }
             hapticSwitch();
             updateSetting({
                 [settingContext]: {
