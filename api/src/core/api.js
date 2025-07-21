@@ -301,32 +301,11 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
     })
   );
 
-  app.get("/cycle-exit-node", (req, res) => {
-    // Logic for cycling exit node
+  app.post("/cycle-exit-node", (req, res) => {
     const status = cycleExitNode();
-    res.status(status.code).send(`
-        <!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Exit Node Changed</title>
-            </head>
-            <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    margin: 0 auto;
-                    padding: 20px;
-                    line-height: 1.6;
-                    background: #141414;
-                    color: whitesmoke;
-                }
-            </style>
-            <body>
-            ${status.msg}. You can close this window.
-            </body>
-        </html>
-        `);
+    res.status(status.code).json({
+      message: status.msg,
+    });
   });
 
   app.get("/tunnel", apiTunnelLimiter, async (req, res) => {

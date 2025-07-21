@@ -1,4 +1,5 @@
 import shell from "shelljs";
+import { setInnertube } from "./innertube.js";
 
 let timeOfLastCycle = Date.now();
 
@@ -37,6 +38,8 @@ function cycleExitNode() {
     }
     const newExitNode = ips[Math.floor(Math.random() * ips.length)];
     shell.exec(`tailscale set --exit-node=${newExitNode}`);
+    // Refresh innertube session
+    setInnertube();
     timeOfLastCycle = Date.now();
     return {
       code: 200,

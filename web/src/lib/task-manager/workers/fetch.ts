@@ -17,7 +17,9 @@ const fetchFile = async (url: string) => {
         } else {
             if (code === "queue.fetch.empty_tunnel") {
                 try {
-                    await fetch(`${url.substring(0, url.indexOf("/tunnel"))}/cycle-exit-node`)
+                    await fetch(`${url.substring(0, url.indexOf("/tunnel"))}/cycle-exit-node`, {
+                        method: "POST",
+                    })
                 } catch (err) {
                     console.log(err)
                 }

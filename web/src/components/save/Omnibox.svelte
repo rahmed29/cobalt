@@ -149,7 +149,7 @@
 -->
 {#if env.DEFAULT_API !== officialApiURL}
     <div id="instance-label">
-        {$t("save.label.community_instance")} | <a id = "cycle-exit-node" href = "{env.DEFAULT_API}cycle-exit-node" target = "_blank" title="If something isn't working, changing to a different exit node might help.">cycle exit node</a>
+        {$t("save.label.community_instance")}
     </div>
 {/if}
 
@@ -234,9 +234,6 @@
 </div>
 
 <style>
-    #cycle-exit-node {
-        text-decoration: underline;
-    }
     #omnibox {
         display: flex;
         flex-direction: column;
