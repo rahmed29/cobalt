@@ -8,10 +8,9 @@ import { getCookie } from "../cookie/manager.js";
 import { getYouTubeSession } from "../helpers/youtube-session.js";
 import cycleExitNode from "../../added_by_ryaan/cycleExitNode.js";
 
-import { innertube, setInnertube } from "../../added_by_ryaan/innertube.js";
 const PLAYER_REFRESH_PERIOD = 1000 * 60 * 15; // 15 mins
 
-let lastRefreshedAt;
+let innertube, lastRefreshedAt;
 
 const codecList = {
     h264: {
@@ -62,13 +61,13 @@ const cloneInnertube = async (customFetch, useSession) => {
     }
 
     if (!innertube || shouldRefreshPlayer) {
-        setInnertube(await Innertube.create({
+        innertube = await Innertube.create({
             fetch: customFetch,
             retrieve_player,
             cookie,
             po_token: useSession ? sessionTokens?.potoken : undefined,
             visitor_data: useSession ? sessionTokens?.visitor_data : undefined,
-        }));
+        });
         lastRefreshedAt = +new Date();
     }
 
@@ -172,7 +171,7 @@ export default async function (o) {
     switch (playability.status) {
         case "LOGIN_REQUIRED":
             if (playability.reason.endsWith("bot")) {
-                cycleExitNode();
+                await cycleExitNode();
                 return { error: "youtube.login" }
             }
             if (playability.reason.endsWith("age") || playability.reason.endsWith("inappropriate for some users.")) {

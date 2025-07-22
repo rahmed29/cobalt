@@ -301,8 +301,8 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
     })
   );
 
-  app.post("/cycle-exit-node", (req, res) => {
-    const status = cycleExitNode();
+  app.post("/cycle-exit-node", async (req, res) => {
+    const status = await cycleExitNode();
     res.status(status.code).json({
       message: status.msg,
     });

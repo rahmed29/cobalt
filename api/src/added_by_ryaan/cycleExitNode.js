@@ -1,9 +1,8 @@
 import shell from "shelljs";
-import { setInnertube } from "./innertube.js";
 
 let timeOfLastCycle = Date.now();
 
-function cycleExitNode() {
+async function cycleExitNode() {
   if (Date.now() - timeOfLastCycle <= 5000) {
     return {
       code: 429,
@@ -38,9 +37,21 @@ function cycleExitNode() {
     }
     const newExitNode = ips[Math.floor(Math.random() * ips.length)];
     shell.exec(`tailscale set --exit-node=${newExitNode}`);
-    // Refresh innertube session
-    setInnertube();
     timeOfLastCycle = Date.now();
+
+    let response = null;
+    let ip = "";
+    try {
+      response = await fetch("https://ipv4.icanhazip.com/");
+      ip = await response.text();
+    } catch (err) {
+      try {
+        response = await fetch("https://checkip.amazonaws.com/");
+        ip = await response.text();
+      } catch (err) {}
+    }
+    console.log(ip.trim());
+
     return {
       code: 200,
       msg: `The exit node was changed to ${newExitNode}`,
