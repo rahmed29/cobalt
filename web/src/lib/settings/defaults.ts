@@ -2,10 +2,11 @@ import { device } from "$lib/device";
 import { defaultLocale } from "$lib/i18n/translations";
 import type { CobaltSettings } from "$lib/types/settings";
 
+// If you modify these, make sure you always modify the `schema.js` files in the api source code
 const defaultSettings: CobaltSettings = {
     schemaVersion: 5,
     advanced: {
-        debug: false,
+        debug: true,
         useWebCodecs: false,
     },
     appearance: {

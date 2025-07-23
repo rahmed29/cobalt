@@ -1,4 +1,5 @@
 import * as Storage from "$lib/storage";
+import fetchCycleExitNode from "../../../added_by_ryaan/fetchCycleExitNode";
 
 const networkErrors = [
     "TypeError: Failed to fetch",
@@ -16,13 +17,7 @@ const fetchFile = async (url: string) => {
             await fetchFile(url);
         } else {
             if (code === "queue.fetch.empty_tunnel") {
-                try {
-                    await fetch(`${url.substring(0, url.indexOf("/tunnel"))}/cycle-exit-node`, {
-                        method: "POST",
-                    })
-                } catch (err) {
-                    console.log(err)
-                }
+                await fetchCycleExitNode(url);
             }
             self.postMessage({
                 cobaltFetchWorker: {
@@ -82,6 +77,7 @@ const fetchFile = async (url: string) => {
         }
 
         if (receivedBytes === 0) {
+            await fetchCycleExitNode(url);
             return error("queue.fetch.empty_tunnel");
         }
 

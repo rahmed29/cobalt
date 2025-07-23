@@ -12,7 +12,7 @@ export const apiSchema = z.object({
 
     audioFormat: z.enum(
         ["best", "mp3", "ogg", "wav", "opus"]
-    ).default("mp3"),
+    ).default("best"),
 
     downloadMode: z.enum(
         ["auto", "audio", "mute"]
@@ -42,11 +42,11 @@ export const apiSchema = z.object({
     convertGif: z.boolean().default(true),
     tiktokFullAudio: z.boolean().default(false),
 
-    alwaysProxy: z.boolean().default(false),
+    alwaysProxy: z.boolean().default(true),
     localProcessing: z.boolean().default(false),
 
     youtubeHLS: z.boolean().default(false),
-    youtubeBetterAudio: z.boolean().default(false),
+    youtubeBetterAudio: z.boolean().default(true),
 
     // temporarily kept for backwards compatibility with cobalt 10 schema
     twitterGif: z.boolean().default(false),

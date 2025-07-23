@@ -292,6 +292,13 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
     }
   });
 
+  app.get("/cycle-exit-node", async (req, res) => {
+    const status = await cycleExitNode();
+    res.status(status.code).json({
+      message: status.msg,
+    });
+  });
+
   app.use(
     "/tunnel",
     cors({
@@ -300,13 +307,6 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
       ...corsConfig,
     })
   );
-
-  app.post("/cycle-exit-node", async (req, res) => {
-    const status = await cycleExitNode();
-    res.status(status.code).json({
-      message: status.msg,
-    });
-  });
 
   app.get("/tunnel", apiTunnelLimiter, async (req, res) => {
     const id = String(req.query.id);

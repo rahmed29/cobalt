@@ -1,14 +1,23 @@
 import shell from "shelljs";
+import { setInnertube } from "./innertube.js";
 
 let timeOfLastCycle = Date.now();
+let switching = false;
 
 async function cycleExitNode() {
+  if (switching) {
+    return {
+      code: 503,
+      msg: "The exit node was not changed because it is currently being changed",
+    };
+  }
   if (Date.now() - timeOfLastCycle <= 5000) {
     return {
       code: 429,
       msg: "The exit node was not changed because it was changed too recently",
     };
   }
+
   try {
     const list = shell.exec("tailscale exit-node list").split("\n");
     let currentExitNode = undefined;
@@ -40,7 +49,8 @@ async function cycleExitNode() {
     timeOfLastCycle = Date.now();
 
     let response = null;
-    let ip = "";
+    let ip = "---.---.---.---";
+    switching = true;
     try {
       response = await fetch("https://ipv4.icanhazip.com/");
       ip = await response.text();
@@ -50,11 +60,12 @@ async function cycleExitNode() {
         ip = await response.text();
       } catch (err) {}
     }
-    console.log(ip.trim());
+    switching = false;
+    setInnertube();
 
     return {
       code: 200,
-      msg: `The exit node was changed to ${newExitNode}`,
+      msg: `The exit node was changed to ${newExitNode}. The outside world will see your IP as ${ip.trim()}`,
     };
   } catch (err) {
     return {
