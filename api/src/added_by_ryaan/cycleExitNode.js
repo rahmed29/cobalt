@@ -19,6 +19,7 @@ async function cycleExitNode() {
   }
 
   try {
+    switching = true;
     const list = shell.exec("tailscale exit-node list").split("\n");
     let currentExitNode = undefined;
     list.forEach((e) => {
@@ -39,6 +40,7 @@ async function cycleExitNode() {
       }
     });
     if (ips.length === 0) {
+      switching = false;
       return {
         code: 500,
         msg: `The exit node was not changed because a new exit node could not be found`,
@@ -50,7 +52,6 @@ async function cycleExitNode() {
 
     let response = null;
     let ip = "---.---.---.---";
-    switching = true;
     try {
       response = await fetch("https://ipv4.icanhazip.com/");
       ip = await response.text();
@@ -68,6 +69,7 @@ async function cycleExitNode() {
       msg: `The exit node was changed to ${newExitNode}. The outside world will see your IP as ${ip.trim()}`,
     };
   } catch (err) {
+    switching = false;
     return {
       code: 500,
       msg: `The exit node was not changed because an error occurred: ${err.message}`,
