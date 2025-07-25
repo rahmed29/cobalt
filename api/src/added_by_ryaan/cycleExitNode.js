@@ -62,7 +62,7 @@ async function cycleExitNode() {
       } catch (err) {}
     }
     switching = false;
-    setInnertube();
+    // setInnertube();
 
     return {
       code: 200,
