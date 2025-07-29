@@ -76,6 +76,9 @@ export const loadEnvs = (env = process.env) => {
 
         envFile: env.API_ENV_FILE,
         envRemoteReloadInterval: 300,
+
+        // added by ryaan
+        usingExitNode: env.USING_EXIT_NODE.toLowerCase() === "true",
     };
 }
 

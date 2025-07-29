@@ -1,10 +1,17 @@
 import shell from "shelljs";
 import { setInnertube } from "./innertube.js";
+import { env } from "../config.js";
 
 let timeOfLastCycle = Date.now();
 let switching = false;
 
 async function cycleExitNode() {
+  if (!env.usingExitNode) {
+    return {
+      code: 405,
+      msg: "The exit node was not changed because the USING_EXIT_NODE environment variable is set to false.",
+    };
+  }
   if (switching) {
     return {
       code: 503,
