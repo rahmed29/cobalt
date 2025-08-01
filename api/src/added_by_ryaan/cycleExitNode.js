@@ -58,7 +58,7 @@ async function cycleExitNode() {
     timeOfLastCycle = Date.now();
 
     let response = null;
-    let ip = "---.---.---.---";
+    let ip = "[IP COULD NOT BE FETCHED]";
     try {
       response = await fetch("https://ipv4.icanhazip.com/");
       ip = await response.text();
