@@ -149,7 +149,8 @@
 -->
 {#if env.DEFAULT_API !== officialApiURL}
     <div id="instance-label">
-        {$t("save.label.community_instance")} | <a href = "{env.DEFAULT_API}cycle-exit-node" target="_blank">cycle exit node</a>
+        {$t("save.label.community_instance")}
+        <!-- | <a href = "{env.DEFAULT_API}cycle-exit-node" target="_blank">cycle exit node</a> -->
     </div>
 {/if}
 
